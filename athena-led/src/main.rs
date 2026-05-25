@@ -295,7 +295,14 @@ impl SystemMonitor {
         }
         false
     }
-
+    fn check_homeproxy_running() -> bool {
+        if let Ok(output) = std::process::Command::new("/etc/init.d/homeproxy").arg("status").output() {
+            if let Ok(stdout) = String::from_utf8(output.stdout) {
+                return stdout.contains("running");
+            }
+        }
+        false
+    }
     // ==========================================
     // [灯光大脑 3] 综合输出当前 100ms 的 4 灯状态
     // ==========================================
@@ -344,7 +351,7 @@ impl SystemMonitor {
 
         // 🏅 2. 奖牌灯 (Bit 1, Val 2): 绑定路由连通性 (每2秒查一次)
         if now.duration_since(self.led_medal_timer).as_secs() >= 2 {
-            self.led_medal_state = self.check_default_route();
+            self.led_medal_state = SystemMonitor::check_homeproxy_running();
             self.led_medal_timer = now;
         }
         if self.led_medal_state { flag |= 2; }
